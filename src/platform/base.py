@@ -20,5 +20,5 @@ class Platform(Sprite):
         self.rect.y += distance
 
     def update(self, *args, **kwargs):
-        if self.rect.bottom > int(HEIGHT * 1.2):
+        if self.rect.top > HEIGHT:
             self.kill()

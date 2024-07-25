@@ -7,7 +7,7 @@ from constants import (
     SCREEN_CENTER,
     WIDTH,
     HEIGHT,
-    MAX_PLATFORMS,
+    RANGE_PLATFORM,
     MIN_SPACING_Y,
     MAX_SPACING_Y,
     SCROLLING_TOP,
@@ -31,28 +31,36 @@ class Level:
 
     def create_platforms(self):
         platforms_len = len(self.platform_group.sprites())
-        if platforms_len >= MAX_PLATFORMS:
-            return
-        for platform_index in range(MAX_PLATFORMS):
-            pos_x = randint(int(0), int(WIDTH))
-            pos_y = platform_index * randint(MIN_SPACING_Y, MAX_SPACING_Y)
-            platform = Platform((pos_x, pos_y))
-            self.visible_group.add(platform)
-            self.platform_group.add(platform)
+        if platforms_len < RANGE_PLATFORM:
+            for platform_index in range(
+                -RANGE_PLATFORM + platforms_len, RANGE_PLATFORM - platforms_len
+            ):
+                pos_x = randint(0, WIDTH)
+                pos_y = platform_index * randint(MIN_SPACING_Y, MAX_SPACING_Y)
+                platform = Platform((pos_x, pos_y))
+                self.visible_group.add(platform)
+                self.platform_group.add(platform)
+
+            for platform in self.platform_group.sprites():
+                for other_platform in self.platform_group.sprites():
+                    if platform is not other_platform and platform.rect.colliderect(
+                        other_platform
+                    ):
+                        other_platform.kill()
+                        break
 
     def handle_platform_collision(self):
         for platform in self.platform_group.sprites():
-            if (
-                self.player.hitbox.colliderect(platform.rect)
-                and self.player.velocity_y > 0
-            ):
+            if self.player.hitbox.colliderect(platform.rect):
                 if self.player.hitbox.bottom <= platform.rect.top + JUMP_SPEED:
                     self.player.jump()
 
     def scroll(self):
-        if self.player.rect.top <= SCROLLING_TOP:
+        if self.player.hitbox.top <= SCROLLING_TOP:
+            scroll_amount = SCROLLING_TOP - self.player.hitbox.top
+            self.player.hitbox.y += scroll_amount
             for platform in self.platform_group.sprites():
-                platform.scroll(abs(JUMP_SPEED))
+                platform.scroll(scroll_amount)
 
     def draw(self):
         self.visible_group.update()
@@ -62,7 +70,7 @@ class Level:
         self.create_platforms()
         self.handle_platform_collision()
         self.scroll()
-        pygame.draw.rect(self.main_surface, "red", self.scrolling_rect)
+        # pygame.draw.rect(self.main_surface, "red", self.scrolling_rect)
 
     def run(self):
         self.update()

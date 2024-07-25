@@ -37,8 +37,10 @@ class Doodle(Player):
             dx = DOODLE_SPEED
 
         self.velocity_y += GRAVITY
+        dy += self.velocity_y
+
         self.hitbox.x += dx
-        self.hitbox.y += dy + self.velocity_y
+        self.hitbox.y += dy
         self.rect.center = self.hitbox.center
 
         if self.hitbox.left > WIDTH:
@@ -48,7 +50,6 @@ class Doodle(Player):
 
     def handle_death(self):
         if self.hitbox.bottom >= HEIGHT:
-            # self.is_dead = True
             self.jump()
 
     def jump(self):
