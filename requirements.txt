@@ -1,0 +1,2 @@
+pygame==2.6.0
+pygame_utility==0.1.1

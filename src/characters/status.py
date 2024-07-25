@@ -1,5 +1,5 @@
+from typing import Tuple
 from enum import Enum
-from random import choice
 
 
 class Direction(Enum):
@@ -15,7 +15,13 @@ class State(Enum):
 class Status:
     def __init__(self):
         self.state = State.IDLE
-        self.direction = choice([Direction.LEFT, Direction.RIGHT])
+        self.direction = Direction.RIGHT
 
     def get_status(self) -> Tuple[Direction, State]:
         return (self.direction, self.state)
+
+    def set_direction(self, direction: Direction):
+        self.direction = direction
+
+    def set_state(self, state: State):
+        self.state = state
