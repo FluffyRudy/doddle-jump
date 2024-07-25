@@ -52,8 +52,8 @@ class Doodle(Player):
         if self.hitbox.bottom >= HEIGHT:
             self.jump()
 
-    def jump(self):
-        self.velocity_y = -JUMP_SPEED
+    def jump(self, amplification: int = 1):
+        self.velocity_y = -JUMP_SPEED * amplification
 
     def update(self, *args, **kwargs):
         if not self.is_dead:

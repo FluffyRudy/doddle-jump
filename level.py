@@ -46,7 +46,7 @@ class Level:
                     if platform is not other_platform and platform.rect.colliderect(
                         other_platform
                     ):
-                        other_platform.kill()
+                        platform.kill()
                         break
 
     def handle_platform_collision(self):
@@ -63,12 +63,12 @@ class Level:
                 platform.scroll(scroll_amount)
 
     def draw(self):
-        self.visible_group.update()
         self.visible_group.draw(self.main_surface)
 
     def update(self):
-        self.create_platforms()
         self.handle_platform_collision()
+        self.visible_group.update()
+        self.create_platforms()
         self.scroll()
         # pygame.draw.rect(self.main_surface, "red", self.scrolling_rect)
 
