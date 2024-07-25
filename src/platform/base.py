@@ -1,14 +1,16 @@
 from typing import Tuple
 from pygame.sprite import Sprite
 from pygame_utility.image_util import load_image
-from constants import WIDTH, HEIGHT
+from constants import WIDTH, HEIGHT, DEFAULT_PLATFORM_SIZE
 from config import GRAPHICS
 
 
 class Platform(Sprite):
-    def __init__(self, position: Tuple[int, int]):
+    def __init__(
+        self, position: Tuple[int, int], size: Tuple[int, int] = DEFAULT_PLATFORM_SIZE
+    ):
         super().__init__()
-        self.image = load_image(GRAPHICS / "platform.png", (0.7, 0.7))
+        self.image = load_image(GRAPHICS / "platform.png", scale_size=size)
         self.rect = self.image.get_rect(topleft=position)
 
         if self.rect.right > WIDTH:

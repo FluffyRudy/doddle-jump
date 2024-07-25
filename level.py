@@ -1,6 +1,6 @@
 import pygame
-from pygame.sprite import Group
 from random import randint
+from pygame.sprite import Group, GroupSingle
 from src.characters.player.doodle import Doodle
 from src.platform.base import Platform
 from constants import (
@@ -13,21 +13,28 @@ from constants import (
     SCROLLING_TOP,
     JUMP_SPEED,
     SCROLLING_RECT,
+    DEFAULT_PLATFORM_SIZE,
 )
 
 
 class Level:
     def __init__(self):
+        self.setup()
+
+    def setup(self):
         self.main_surface = pygame.display.get_surface()
-        self.player = Doodle(position=(SCREEN_CENTER[0], HEIGHT // 2))
+        self.player = Doodle(
+            position=(SCREEN_CENTER[0], HEIGHT - DEFAULT_PLATFORM_SIZE[1])
+        )
+        self.player_group = GroupSingle(self.player)
 
         self.visible_group = Group()
         self.platform_group = Group()
-        self.visible_group.add(self.player)
-
         self.scrolling_rect = pygame.Rect(SCROLLING_RECT)
 
         self.create_platforms()
+
+        self.player.hitbox.midbottom = self.platform_group.sprites()[0].rect.topleft
 
     def create_platforms(self):
         platforms_len = len(self.platform_group.sprites())
@@ -64,10 +71,12 @@ class Level:
 
     def draw(self):
         self.visible_group.draw(self.main_surface)
+        self.player_group.draw(self.main_surface)
 
     def update(self):
         self.handle_platform_collision()
         self.visible_group.update()
+        self.player_group.update()
         self.create_platforms()
         self.scroll()
         # pygame.draw.rect(self.main_surface, "red", self.scrolling_rect)
