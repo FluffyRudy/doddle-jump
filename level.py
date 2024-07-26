@@ -7,9 +7,8 @@ from constants import (
     SCREEN_CENTER,
     WIDTH,
     HEIGHT,
-    RANGE_PLATFORM,
-    MIN_SPACING_Y,
-    MAX_SPACING_Y,
+    DEFAULT_MIN_SPACING_Y,
+    DEFAULT_MAX_SPACING_Y,
     SCROLLING_TOP,
     JUMP_SPEED,
     SCROLLING_RECT,
@@ -46,24 +45,18 @@ class Level:
         self.score_surface.set_alpha(100)
 
     def create_platforms(self):
-        platforms_len = len(self.platform_group.sprites())
-        if platforms_len < RANGE_PLATFORM:
-            for platform_index in range(
-                -RANGE_PLATFORM + platforms_len, RANGE_PLATFORM - platforms_len
-            ):
-                pos_x = randint(0, WIDTH)
-                pos_y = platform_index * randint(MIN_SPACING_Y, MAX_SPACING_Y)
-                platform = Platform((pos_x, pos_y))
-                self.visible_group.add(platform)
-                self.platform_group.add(platform)
-
-            for platform in self.platform_group.sprites():
-                for other_platform in self.platform_group.sprites():
-                    if platform is not other_platform and platform.rect.colliderect(
-                        other_platform
-                    ):
-                        platform.kill()
-                        break
+        _, last_y = Platform.get_last_pos()
+        while last_y >= 0:
+            pos_x = randint(0, WIDTH - DEFAULT_PLATFORM_SIZE[0])
+            pos_y = last_y - (
+                DEFAULT_PLATFORM_SIZE[1]
+                + randint(DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y)
+            )
+            last_y = pos_y
+            platform = Platform((pos_x, pos_y))
+            self.visible_group.add(platform)
+            self.platform_group.add(platform)
+            Platform.update_position((pos_x, last_y))
 
     def handle_platform_collision(self):
         if self.player.velocity_y > 0:
@@ -81,6 +74,14 @@ class Level:
             self.player.hitbox.y += scroll_amount
             for platform in self.platform_group.sprites():
                 platform.scroll(scroll_amount)
+                if platform.isoffview():
+                    last_x, last_y = Platform.get_last_pos()
+                    pos_y = last_y + (
+                        DEFAULT_PLATFORM_SIZE[1]
+                        + randint(DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y)
+                    )
+                    Platform.update_position((last_x, pos_y))
+                    platform.kill()
             self.total_scroll += scroll_amount
 
     def update_score(self):
