@@ -4,7 +4,7 @@ from enum import Enum
 from .status import Status
 
 
-class Player(Sprite):
+class Character(Sprite):
     def __init__(self, position: Tuple[int, int]):
         super().__init__()
         self.status = Status()

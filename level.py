@@ -1,12 +1,22 @@
 import pygame
-from random import randint
+from typing import Tuple
+from random import randint, choice
 from pygame.sprite import Group, GroupSingle
 from src.characters.player.doodle import Doodle
-from src.platform.base import Platform
+from src.platform.effects import EffectTypes, effect_map
+from src.platform.platform import (
+    Platform,
+    StaticPlatform,
+    KineticPlatform,
+    BrokenPlatform,
+    create_platform,
+)
 from constants import (
     SCREEN_CENTER,
     WIDTH,
     HEIGHT,
+    DEFAULT_MIN_SPACING_X,
+    DEFAULT_MAX_SPACING_X,
     DEFAULT_MIN_SPACING_Y,
     DEFAULT_MAX_SPACING_Y,
     SCROLLING_TOP,
@@ -28,11 +38,11 @@ class Level:
         self.player = Doodle(
             position=(SCREEN_CENTER[0], HEIGHT - DEFAULT_PLATFORM_SIZE[1])
         )
-        self.player_group = GroupSingle(self.player)
 
+        self.player_group = GroupSingle(self.player)
         self.visible_group = Group()
         self.platform_group = Group()
-        self.scrolling_rect = pygame.Rect(SCROLLING_RECT)
+        self.effects_group = []
 
         self.create_platforms()
         self.player.hitbox.midbottom = self.platform_group.sprites()[0].rect.topleft
@@ -52,23 +62,31 @@ class Level:
                 DEFAULT_PLATFORM_SIZE[1]
                 + randint(DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y)
             )
+            if pos_y < DEFAULT_MIN_SPACING_X:
+                break
             last_y = pos_y
-            platform = Platform((pos_x, pos_y))
+            platform = create_platform((pos_x, pos_y))
             self.visible_group.add(platform)
             self.platform_group.add(platform)
             Platform.update_position((pos_x, last_y))
 
     def handle_platform_collision(self):
-        if self.player.velocity_y > 0:
-            for platform in self.platform_group.sprites():
-                if self.player.hitbox.colliderect(platform.rect):
-                    if self.player.hitbox.bottom <= platform.rect.top + JUMP_SPEED:
-                        self.player.hitbox.bottom = platform.rect.top
-                        self.player.rect.center = self.player.hitbox.center
-                        self.player.jump()
-                        break
+        if self.player.velocity_y <= 0:
+            return
+        for platform in self.platform_group.sprites():
+            if self.player.is_on_platform(platform.rect):
+                self.player.hitbox.bottom = platform.rect.top
+                self.player.rect.center = self.player.hitbox.center
+                self.player.jump()
+                if isinstance(platform, BrokenPlatform):
+                    print(platform.rect.size)
+                    self.add_effect(
+                        EffectTypes.BROKEN, platform.rect.center, platform.rect.size
+                    )
+                    platform.kill()
+                break
 
-    def scroll(self):
+    def manage_platforms(self):
         if self.player.hitbox.top <= SCROLLING_TOP:
             scroll_amount = SCROLLING_TOP - self.player.hitbox.top
             self.player.hitbox.y += scroll_amount
@@ -83,6 +101,20 @@ class Level:
                     Platform.update_position((last_x, pos_y))
                     platform.kill()
             self.total_scroll += scroll_amount
+
+    def add_effect(
+        self, effect_type: EffectTypes, position: Tuple[int, int], size: Tuple[int, int]
+    ):
+        effect = effect_map[effect_type]
+        self.effects_group.append(effect(position, size))
+
+    def manage_effect(self):
+        for effect in self.effects_group[:]:
+            scroll_amount = effect.left_rect.top - self.player.rect.bottom
+            effect.update(scroll_amount // 10)
+            effect.draw(self.main_surface)
+            if effect.isoffview():
+                self.effects_group.remove(effect)
 
     def update_score(self):
         self.score = int(self.total_scroll // 10)
@@ -100,7 +132,8 @@ class Level:
         self.visible_group.update()
         self.player_group.update()
         self.create_platforms()
-        self.scroll()
+        self.manage_platforms()
+        self.manage_effect()
         self.update_score()
 
     def draw(self):

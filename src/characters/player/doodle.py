@@ -1,17 +1,18 @@
 from typing import Tuple
 from pygame_utility.image_util import load_image
+from pygame import Rect
 from pygame.sprite import Sprite
 from pygame.transform import flip
 from pygame import K_LEFT, K_RIGHT
 from pygame.key import get_pressed
 from pygame import Surface
 from ..status import Direction, State
-from ..base import Player
+from ..base import Character
 from config import GRAPHICS
 from constants import DOODLE_SPEED, WIDTH, HEIGHT, GRAVITY, JUMP_SPEED, SCROLLING_TOP
 
 
-class Doodle(Player):
+class Doodle(Character):
     def __init__(self, position: Tuple[int, int]):
         super().__init__(position)
         self.image = load_image(GRAPHICS / "doodler-right.png", (0.7, 0.7))
@@ -54,6 +55,13 @@ class Doodle(Player):
 
     def jump(self, amplification: int = 1):
         self.velocity_y = -JUMP_SPEED * amplification
+
+    def is_on_platform(self, platform_rect: Rect):
+        threshold = abs(self.velocity_y * 1.5)
+        if self.hitbox.colliderect(platform_rect):
+            if self.hitbox.bottom <= platform_rect.top + int(threshold):
+                return True
+        return False
 
     def update(self, *args, **kwargs):
         if not self.is_dead:
