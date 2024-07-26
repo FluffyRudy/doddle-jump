@@ -16,7 +16,7 @@ class Doodle(Player):
         super().__init__(position)
         self.image = load_image(GRAPHICS / "doodler-right.png", (0.7, 0.7))
         self.rect = self.image.get_rect(midbottom=position)
-        self.hitbox = self.rect.inflate(-20, -5)
+        self.hitbox = self.rect.inflate(-20, 0)
         self.velocity_y = 0
 
         self.is_dead = False
