@@ -66,10 +66,14 @@ class Level:
                         break
 
     def handle_platform_collision(self):
-        for platform in self.platform_group.sprites():
-            if self.player.hitbox.colliderect(platform.rect):
-                if self.player.hitbox.bottom <= platform.rect.top + JUMP_SPEED:
-                    self.player.jump()
+        if self.player.velocity_y > 0:
+            for platform in self.platform_group.sprites():
+                if self.player.hitbox.colliderect(platform.rect):
+                    if self.player.hitbox.bottom <= platform.rect.top + JUMP_SPEED:
+                        self.player.hitbox.bottom = platform.rect.top
+                        self.player.rect.center = self.player.hitbox.center
+                        self.player.jump()
+                        break
 
     def scroll(self):
         if self.player.hitbox.top <= SCROLLING_TOP:
