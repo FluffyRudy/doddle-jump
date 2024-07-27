@@ -83,12 +83,13 @@ class KineticPlatform(Platform):
     def update(self):
         if self.rect.right > WIDTH or self.rect.left < 0:
             self.direction.x *= -1
+        self.rect.x += self.speed * self.direction.x
 
 
 def create_platform(
     position: Tuple[int, int], size: Tuple[int, int] = DEFAULT_PLATFORM_SIZE
 ) -> Platform:
-    platform_types: List[Platform] = [StaticPlatform, BrokenPlatform]
-    weight = [0.92, 0.08]
-    platform_type: Platform = choices(platform_types, weight)[0]
+    platform_types: List[Platform] = [StaticPlatform, BrokenPlatform, KineticPlatform]
+    weight = [0.92, 0.05, 0.03]
+    platform_type: Platform = choices(platform_types, weights=weight)[0]
     return platform_type(position, DEFAULT_PLATFORM_SIZE)
