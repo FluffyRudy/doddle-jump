@@ -47,7 +47,12 @@ class Level:
         self.effects_group = []
 
         self.create_platforms()
-        self.player.hitbox.midbottom = self.platform_group.sprites()[0].rect.topleft
+        bottom_platform_rect = self.bottomost_platform().rect
+        self.player.hitbox.midbottom = (
+            bottom_platform_rect.centerx,
+            bottom_platform_rect.top - 5,
+        )
+        self.player_group.update()
 
         self.total_scroll = 0
         self.score = 0
@@ -100,6 +105,9 @@ class Level:
     def topmost_platform(self) -> Platform:
         return min(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
 
+    def bottomost_platform(self) -> Platform:
+        return max(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
+
     def add_effect(
         self, effect_type: EffectTypes, position: Tuple[int, int], size: Tuple[int, int]
     ):
@@ -125,6 +133,12 @@ class Level:
         self.main_surface.blit(self.score_surface, (0, 0))
         self.score_surface.fill(SCORE_CONTAINERE_BG)
 
+    def display_start_message(self):
+        message = "PRESS ENTER TO CONTINUE"
+        start_message = self.font.render(message, True, BLACK)
+        start_rect = start_message.get_rect(center=SCREEN_CENTER)
+        self.main_surface.blit(start_message, start_rect.topleft)
+
     def update(self):
         self.handle_platform_collision()
         self.visible_group.update()
@@ -138,7 +152,3 @@ class Level:
         self.visible_group.draw(self.main_surface)
         self.player_group.draw(self.main_surface)
         self.display_score()
-
-    def run(self):
-        self.update()
-        self.draw()

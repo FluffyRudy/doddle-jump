@@ -1,6 +1,8 @@
 import pygame
+from typing import List
+from pygame.event import Event
 from pygame import Color
-from constants import HEIGHT, WIDTH, FPS, BLACK
+from constants import HEIGHT, WIDTH, FPS, BLACK, SCREEN_CENTER
 from level import Level
 
 
@@ -15,6 +17,7 @@ class Game:
         self.running = True
         self.start = False
         self.paused = False
+        self.on_menu = False
 
         self.level = Level()
 
@@ -22,6 +25,12 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            if (
+                event.type == pygame.KEYDOWN
+                and event.key == pygame.K_SPACE
+                and not self.start
+            ):
+                self.start = True
 
     def run(self):
         while self.running:
@@ -29,7 +38,13 @@ class Game:
             delta_time = self.clock.tick(FPS)
 
             self.handle_events()
-            self.level.run()
+
+            self.level.draw()
+            if self.start and not self.paused and not self.on_menu:
+                self.level.update()
+
+            if not self.on_menu and not self.start:
+                self.level.display_start_message()
 
             pygame.display.update()
         pygame.quit()
