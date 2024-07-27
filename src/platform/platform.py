@@ -50,6 +50,11 @@ class Platform(Sprite):
     def get_last_pos() -> Tuple[int, int]:
         return Platform.last_x, Platform.last_y
 
+    @staticmethod
+    def reset_position():
+        Platform.last_x = (SCREEN_CENTER[0] - DEFAULT_PLATFORM_SIZE[0]) // 2
+        Platform.last_y = HEIGHT - DEFAULT_PLATFORM_SIZE[1]
+
     def scroll(self, distance: int):
         self.rect.y += distance
 

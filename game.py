@@ -17,20 +17,26 @@ class Game:
         self.running = True
         self.start = False
         self.paused = False
-        self.on_menu = False
+        self.restarted = False
 
         self.level = Level()
+
+    def restart(self):
+        self.start = False
+        self.restarted = False
+        self.level = Level()
+        self.level.update()
+        self.level.draw()
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            if (
-                event.type == pygame.KEYDOWN
-                and event.key == pygame.K_SPACE
-                and not self.start
-            ):
-                self.start = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and not self.start:
+                    self.start = True
+                elif self.level.is_player_dead():
+                    self.restart()
 
     def run(self):
         while self.running:
@@ -40,10 +46,10 @@ class Game:
             self.handle_events()
 
             self.level.draw()
-            if self.start and not self.paused and not self.on_menu:
+            if self.start and not self.paused:
                 self.level.update()
 
-            if not self.on_menu and not self.start:
+            if not self.start or self.level.is_player_dead():
                 self.level.display_start_message()
 
             pygame.display.update()

@@ -49,10 +49,6 @@ class Doodle(Character):
         elif self.hitbox.right < 0:
             self.hitbox.left = WIDTH
 
-    def handle_death(self):
-        if self.hitbox.bottom >= HEIGHT:
-            self.jump()
-
     def jump(self, amplification: int = 1):
         self.velocity_y = -JUMP_SPEED * amplification
 
@@ -66,4 +62,3 @@ class Doodle(Character):
     def update(self, *args, **kwargs):
         if not self.is_dead:
             self.movement()
-            self.handle_death()

@@ -34,8 +34,10 @@ from constants import (
 class Level:
     def __init__(self):
         self.setup()
+        self.game_over = False
 
     def setup(self):
+        Platform.reset_position()
         self.main_surface = pygame.display.get_surface()
         self.player = Doodle(
             position=(SCREEN_CENTER[0], HEIGHT - DEFAULT_PLATFORM_SIZE[1])
@@ -138,6 +140,11 @@ class Level:
         start_message = self.font.render(message, True, BLACK)
         start_rect = start_message.get_rect(center=SCREEN_CENTER)
         self.main_surface.blit(start_message, start_rect.topleft)
+
+    def is_player_dead(self):
+        if self.player.hitbox.bottom >= HEIGHT:
+            return True
+        return False
 
     def update(self):
         self.handle_platform_collision()
