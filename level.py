@@ -80,7 +80,6 @@ class Level:
                     )
                     Platform.update_position((last_x, last_y))
                     platform.kill()
-                    print(len(self.platform_group.sprites()))
             self.total_scroll += scroll_amount
 
     def handle_platform_collision(self):
@@ -92,7 +91,6 @@ class Level:
                 self.player.rect.center = self.player.hitbox.center
                 self.player.jump()
                 if isinstance(platform, BrokenPlatform):
-                    print(platform.rect.size)
                     self.add_effect(
                         EffectTypes.BROKEN, platform.rect.center, platform.rect.size
                     )
