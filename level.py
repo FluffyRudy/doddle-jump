@@ -16,6 +16,7 @@ from constants import (
     SCREEN_CENTER,
     WIDTH,
     HEIGHT,
+    INITIAL_PLATFORM_COUNT,
     DEFAULT_MIN_SPACING_X,
     DEFAULT_MAX_SPACING_X,
     DEFAULT_MIN_SPACING_Y,
@@ -57,7 +58,7 @@ class Level:
 
     def create_platforms(self):
         _, last_y = Platform.get_last_pos()
-        while len(self.platform_group.sprites()) < 15:
+        while len(self.platform_group.sprites()) < INITIAL_PLATFORM_COUNT:
             pos_x = randint(DEFAULT_MIN_SPACING_X, DEFAULT_MAX_SPACING_X)
             pos_y = last_y - randint(DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y)
             last_y = pos_y
@@ -65,6 +66,22 @@ class Level:
             self.visible_group.add(platform)
             self.platform_group.add(platform)
             Platform.update_position((pos_x, last_y))
+
+    def manage_platforms_scrolling(self):
+        if self.player.hitbox.top <= SCROLLING_TOP:
+            scroll_amount = SCROLLING_TOP - self.player.hitbox.top
+            self.player.hitbox.y += scroll_amount
+            for platform in self.platform_group.sprites():
+                platform.scroll(scroll_amount)
+                if platform.isoffview():
+                    last_x, last_y = Platform.get_last_pos()
+                    last_y = self.topmost_platform().rect.y - randint(
+                        DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y
+                    )
+                    Platform.update_position((last_x, last_y))
+                    platform.kill()
+                    print(len(self.platform_group.sprites()))
+            self.total_scroll += scroll_amount
 
     def handle_platform_collision(self):
         if self.player.velocity_y <= 0:
@@ -84,22 +101,6 @@ class Level:
 
     def topmost_platform(self) -> Platform:
         return min(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
-
-    def manage_platforms(self):
-        if self.player.hitbox.top <= SCROLLING_TOP:
-            scroll_amount = SCROLLING_TOP - self.player.hitbox.top
-            self.player.hitbox.y += scroll_amount
-            for platform in self.platform_group.sprites():
-                platform.scroll(scroll_amount)
-                if platform.isoffview():
-                    last_x, last_y = Platform.get_last_pos()
-                    last_y = self.topmost_platform().rect.y - randint(
-                        DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y
-                    )
-                    Platform.update_position((last_x, last_y))
-                    platform.kill()
-                    print(len(self.platform_group.sprites()))
-            self.total_scroll += scroll_amount
 
     def add_effect(
         self, effect_type: EffectTypes, position: Tuple[int, int], size: Tuple[int, int]
@@ -131,7 +132,7 @@ class Level:
         self.visible_group.update()
         self.player_group.update()
         self.create_platforms()
-        self.manage_platforms()
+        self.manage_platforms_scrolling()
         self.manage_effect()
         self.update_score()
 
