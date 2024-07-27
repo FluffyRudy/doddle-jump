@@ -1,5 +1,6 @@
 import pygame
 from typing import Tuple
+from functools import reduce
 from random import randint, choice
 from pygame.sprite import Group, GroupSingle
 from src.characters.player.doodle import Doodle
@@ -56,14 +57,9 @@ class Level:
 
     def create_platforms(self):
         _, last_y = Platform.get_last_pos()
-        while last_y >= 0:
-            pos_x = randint(0, WIDTH - DEFAULT_PLATFORM_SIZE[0])
-            pos_y = last_y - (
-                DEFAULT_PLATFORM_SIZE[1]
-                + randint(DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y)
-            )
-            if pos_y < DEFAULT_MIN_SPACING_X:
-                break
+        while len(self.platform_group.sprites()) < 15:
+            pos_x = randint(DEFAULT_MIN_SPACING_X, DEFAULT_MAX_SPACING_X)
+            pos_y = last_y - randint(DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y)
             last_y = pos_y
             platform = create_platform((pos_x, pos_y))
             self.visible_group.add(platform)
@@ -86,6 +82,9 @@ class Level:
                     platform.kill()
                 break
 
+    def topmost_platform(self) -> Platform:
+        return min(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
+
     def manage_platforms(self):
         if self.player.hitbox.top <= SCROLLING_TOP:
             scroll_amount = SCROLLING_TOP - self.player.hitbox.top
@@ -94,12 +93,12 @@ class Level:
                 platform.scroll(scroll_amount)
                 if platform.isoffview():
                     last_x, last_y = Platform.get_last_pos()
-                    pos_y = last_y + (
-                        DEFAULT_PLATFORM_SIZE[1]
-                        + randint(DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y)
+                    last_y = self.topmost_platform().rect.y - randint(
+                        DEFAULT_MIN_SPACING_Y, DEFAULT_MAX_SPACING_Y
                     )
-                    Platform.update_position((last_x, pos_y))
+                    Platform.update_position((last_x, last_y))
                     platform.kill()
+                    print(len(self.platform_group.sprites()))
             self.total_scroll += scroll_amount
 
     def add_effect(
