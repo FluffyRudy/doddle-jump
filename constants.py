@@ -23,3 +23,6 @@ SCORE_CONTAINERE_BG = "#cdd4db"
 
 # colors
 BLACK = (0, 0, 0, 255)
+
+#menu
+DEFAULT_BUTTON_SIZE = 64, 64

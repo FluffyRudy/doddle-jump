@@ -1,20 +1,16 @@
 import pygame
 from typing import Tuple
-from functools import reduce
-from random import randint, choice
+from random import randint
 from pygame.sprite import Group, GroupSingle
 from src.characters.player.doodle import Doodle
 from src.platform.effects import EffectTypes, effect_map
 from src.platform.platform import (
     Platform,
-    StaticPlatform,
-    KineticPlatform,
     BrokenPlatform,
     create_platform,
 )
 from constants import (
     SCREEN_CENTER,
-    WIDTH,
     HEIGHT,
     INITIAL_PLATFORM_COUNT,
     DEFAULT_MIN_SPACING_X,
@@ -22,8 +18,6 @@ from constants import (
     DEFAULT_MIN_SPACING_Y,
     DEFAULT_MAX_SPACING_Y,
     SCROLLING_TOP,
-    JUMP_SPEED,
-    SCROLLING_RECT,
     DEFAULT_PLATFORM_SIZE,
     SCORE_CONTAINER_SIZE,
     SCORE_CONTAINERE_BG,
@@ -135,8 +129,7 @@ class Level:
         self.main_surface.blit(self.score_surface, (0, 0))
         self.score_surface.fill(SCORE_CONTAINERE_BG)
 
-    def display_start_message(self):
-        message = "PRESS ENTER TO CONTINUE"
+    def display_message(self, message: str):
         start_message = self.font.render(message, True, BLACK)
         start_rect = start_message.get_rect(center=SCREEN_CENTER)
         self.main_surface.blit(start_message, start_rect.topleft)

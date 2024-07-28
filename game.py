@@ -1,9 +1,22 @@
 import pygame
-from typing import List
-from pygame.event import Event
+from typing import Optional
 from pygame import Color
-from constants import HEIGHT, WIDTH, FPS, BLACK, SCREEN_CENTER
+from enum import Enum, auto
+from constants import HEIGHT, WIDTH, FPS
 from level import Level
+from src.menus.mainmenu import Mainmenu
+
+
+class GameState(Enum):
+    MAINMENU = auto()
+    PAUSED = auto()
+    INGAME = auto()
+    GAMEOVER = auto()
+
+
+class InGameState(Enum):
+    STARTED = auto()
+    NOTSTARTED = auto()
 
 
 class Game:
@@ -15,28 +28,39 @@ class Game:
         self.clock = pygame.time.Clock()
 
         self.running = True
-        self.start = False
-        self.paused = False
-        self.restarted = False
+        self.main_state = GameState.MAINMENU
+        self.ingame_state = InGameState.NOTSTARTED
 
         self.level = Level()
+
+        self.event: Optional[pygame.event.Event] = None
+        menu_size = int(WIDTH * 0.5), int(HEIGHT * 0.5)
+        self.main_menu = Mainmenu(menu_size, (10, 0), self.screen)
 
     def restart(self):
-        self.start = False
-        self.restarted = False
         self.level = Level()
-        self.level.update()
-        self.level.draw()
 
     def handle_events(self):
+        self.event = None
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and not self.start:
-                    self.start = True
-                elif self.level.is_player_dead():
-                    self.restart()
+            elif event.type == pygame.KEYDOWN:
+                pass
+            self.event = event
+
+    def manage_state(self):
+        if self.main_state == GameState.MAINMENU:
+            self.main_menu.update(self.event)
+            self.main_menu.draw()
+        elif self.main_state == GameState.INGAME:
+            if self.ingame_state == InGameState.STARTED:
+                self.level.update()
+            else:
+                self.level.display_message("PRESS SPACE TO START")
+            self.level.draw()
+        elif self.main_state == GameState.PAUSED:
+            pass
 
     def run(self):
         while self.running:
@@ -44,13 +68,7 @@ class Game:
             delta_time = self.clock.tick(FPS)
 
             self.handle_events()
-
-            self.level.draw()
-            if self.start and not self.paused:
-                self.level.update()
-
-            if not self.start or self.level.is_player_dead():
-                self.level.display_start_message()
+            self.manage_state()
 
             pygame.display.update()
         pygame.quit()
