@@ -28,14 +28,17 @@ class Game:
         self.clock = pygame.time.Clock()
 
         self.running = True
-        self.main_state = GameState.MAINMENU
+        self.main_state = GameState.INGAME
         self.ingame_state = InGameState.NOTSTARTED
 
         self.level = Level()
 
         self.event: Optional[pygame.event.Event] = None
         menu_size = int(WIDTH * 0.5), int(HEIGHT * 0.5)
-        self.main_menu = Mainmenu(menu_size, (10, 0), self.screen)
+        self.main_menu = Mainmenu()
+
+    def go_ingame(self):
+        self.main_state = GameState.INGAME
 
     def restart(self):
         self.level = Level()
@@ -46,7 +49,8 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                pass
+                if event.key == pygame.K_SPACE:
+                    self.ingame_state = InGameState.STARTED
             self.event = event
 
     def manage_state(self):
@@ -56,15 +60,18 @@ class Game:
         elif self.main_state == GameState.INGAME:
             if self.ingame_state == InGameState.STARTED:
                 self.level.update()
+                self.level.draw()
             else:
+                self.level.draw()
                 self.level.display_message("PRESS SPACE TO START")
-            self.level.draw()
         elif self.main_state == GameState.PAUSED:
             pass
+        elif self.main_state == GameState.GAMEOVER:
+            self.restart()
 
     def run(self):
         while self.running:
-            self.screen.fill(Color("#658da0"))
+            self.screen.fill(Color("lightgrey"))
             delta_time = self.clock.tick(FPS)
 
             self.handle_events()
