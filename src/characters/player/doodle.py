@@ -20,8 +20,11 @@ class Doodle(Character):
         self.hitbox = self.rect.inflate(-20, 0)
         self.velocity_y = 0
         self.jump_speed = JUMP_SPEED
+        self.jump_speed_increment = 0
+        self.jump_speed_inc_factor = 0.5
         self.speed = DOODLE_SPEED
         self.speed_increment = 0
+        self.speed_inc_factor = 0.2
 
         self.is_dead = False
 
@@ -33,12 +36,12 @@ class Doodle(Character):
             if self.status.get_status()[0] != Direction.LEFT:
                 self.status.set_direction(Direction.LEFT)
                 self.image = flip(self.image, True, False)
-            dx -= self.speed + self.speed_increment
+            dx -= self.speed
         if keys[K_RIGHT]:
             if self.status.get_status()[0] != Direction.RIGHT:
                 self.status.set_direction(Direction.RIGHT)
                 self.image = flip(self.image, True, False)
-            dx = self.speed + self.speed_increment
+            dx = self.speed
 
         self.velocity_y += GRAVITY
         dy += self.velocity_y
@@ -52,8 +55,16 @@ class Doodle(Character):
         elif self.hitbox.right < 0:
             self.hitbox.left = WIDTH
 
+    def increase_speed(self):
+        self.speed_increment += self.speed_inc_factor
+        self.speed += int(self.speed_increment)
+
+    def increase_jump_speed(self):
+        self.jump_speed_increment += self.jump_speed_inc_factor
+        self.jump_speed += int(self.jump_speed_increment)
+
     def jump(self, amplification: int = 1):
-        self.velocity_y = -(self.jump_speed + self.speed_increment) * amplification
+        self.velocity_y = -self.jump_speed * amplification
 
     def is_on_platform(self, platform_rect: Rect):
         threshold = abs(self.velocity_y * 1.5)

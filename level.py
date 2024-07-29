@@ -122,9 +122,9 @@ class Level:
 
     def increase_difficulty(self):
         if self.score >= self.difficult_amount_score:
-            self.player.speed_increment += 1
+            self.player.increase_speed()
+            self.player.increase_jump_speed()
             self.difficult_amount_score *= 2
-            print(self.player.speed, self.player.jump_speed)
 
     def update_score(self):
         self.score = int(self.total_scroll // 10)
