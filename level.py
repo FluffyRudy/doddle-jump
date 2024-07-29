@@ -55,7 +55,7 @@ class Level:
         self.font = pygame.font.Font(None, 50)
         self.score_surface = pygame.Surface(SCORE_CONTAINER_SIZE, pygame.SRCALPHA)
         self.score_surface.fill(pygame.Color(SCORE_CONTAINERE_BG))
-        self.score_surface.set_alpha(100)
+        self.score_surface.set_alpha(150)
 
     def create_platforms(self):
         _, last_y = Platform.get_last_pos()
