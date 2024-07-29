@@ -57,6 +57,8 @@ class Level:
         self.score_surface.fill(pygame.Color(SCORE_CONTAINERE_BG))
         self.score_surface.set_alpha(150)
 
+        self.difficult_amount_score = 500
+
     def create_platforms(self):
         _, last_y = Platform.get_last_pos()
         while len(self.platform_group.sprites()) < INITIAL_PLATFORM_COUNT:
@@ -118,6 +120,12 @@ class Level:
             if effect.isoffview():
                 self.effects_group.remove(effect)
 
+    def increase_difficulty(self):
+        if self.score >= self.difficult_amount_score:
+            self.player.speed_increment += 1
+            self.difficult_amount_score *= 2
+            print(self.player.speed, self.player.jump_speed)
+
     def update_score(self):
         self.score = int(self.total_scroll // 10)
 
@@ -147,6 +155,7 @@ class Level:
         self.manage_platforms_scrolling()
         self.manage_effect()
         self.update_score()
+        self.increase_difficulty()
 
     def draw(self):
         self.visible_group.draw(self.main_surface)
