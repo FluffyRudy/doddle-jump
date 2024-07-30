@@ -1,14 +1,16 @@
 import pygame
-from typing import Tuple
-from random import randint
+from typing import Tuple, Optional
+from random import randint, choice, uniform
 from pygame.sprite import Group, GroupSingle
 from src.characters.player.doodle import Doodle
 from src.platform.effects import EffectTypes, effect_map
 from src.platform.platform import (
     Platform,
     BrokenPlatform,
+    KineticPlatform,
     create_platform,
 )
+from src.boosters.spring import Spring
 from constants import (
     SCREEN_CENTER,
     HEIGHT,
@@ -19,6 +21,7 @@ from constants import (
     DEFAULT_MAX_SPACING_Y,
     SCROLLING_TOP,
     DEFAULT_PLATFORM_SIZE,
+    BOOSTER_OCCUR_INTERVAL,
     SCORE_CONTAINER_SIZE,
     SCORE_CONTAINERE_BG,
     BLACK,
@@ -40,6 +43,7 @@ class Level:
         self.player_group = GroupSingle(self.player)
         self.visible_group = Group()
         self.platform_group = Group()
+        self.booster_group = GroupSingle()
         self.effects_group = []
 
         self.create_platforms()
@@ -59,6 +63,9 @@ class Level:
 
         self.difficult_amount_score = 1000
 
+        self.booster_last_spawn = pygame.time.get_ticks()
+        self.booster_spawn_time = uniform(*BOOSTER_OCCUR_INTERVAL)
+
     def create_platforms(self):
         _, last_y = Platform.get_last_pos()
         while len(self.platform_group.sprites()) < INITIAL_PLATFORM_COUNT:
@@ -70,7 +77,29 @@ class Level:
             self.platform_group.add(platform)
             Platform.update_position((pos_x, last_y))
 
-    def manage_platforms_scrolling(self):
+    def spawn_boosters(self):
+        if self.booster_group.sprite is not None:
+            return
+        random_platform = self.get_random_platform()
+        current_time = pygame.time.get_ticks()
+        time_diff = current_time - self.booster_last_spawn
+        if random_platform is not None and time_diff > self.booster_spawn_time:
+            pos = self.get_random_platform().rect.center
+            spring = Spring(pos)
+            self.booster_group.add(spring)
+            self.visible_group.add(spring)
+            self.booster_last_spawn = current_time
+            self.booster_spawn_time = uniform(*BOOSTER_OCCUR_INTERVAL)
+
+    def get_random_platform(self) -> Optional[Platform]:
+        platform = None
+        for platform in self.platform_group.sprites():
+            if platform.rect.top <= 0 and not isinstance(platform, KineticPlatform):
+                platform = platform
+                break
+        return platform
+
+    def manage_scrolling(self):
         if self.player.hitbox.top <= SCROLLING_TOP:
             scroll_amount = SCROLLING_TOP - self.player.hitbox.top
             self.player.hitbox.y += scroll_amount
@@ -84,6 +113,9 @@ class Level:
                     Platform.update_position((last_x, last_y))
                     platform.kill()
             self.total_scroll += scroll_amount
+
+            for booster in self.booster_group.sprites():
+                booster.scroll(scroll_amount)
 
     def handle_platform_collision(self):
         if self.player.velocity_y <= 0:
@@ -105,6 +137,15 @@ class Level:
 
     def bottomost_platform(self) -> Platform:
         return max(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
+
+    def handle_booster_collision(self):
+        for booster in self.booster_group.sprites():
+            if isinstance(booster, Spring) and booster.rect.colliderect(
+                self.player.rect
+            ):
+                if booster.rect.y >= self.player.rect.y and self.player.velocity_y > 0:
+                    booster.activate()
+                    self.player.jump(amplification=2)
 
     def add_effect(
         self, effect_type: EffectTypes, position: Tuple[int, int], size: Tuple[int, int]
@@ -149,10 +190,13 @@ class Level:
 
     def update(self):
         self.handle_platform_collision()
+        self.handle_booster_collision()
         self.visible_group.update()
         self.player_group.update()
+        self.booster_group.update()
         self.create_platforms()
-        self.manage_platforms_scrolling()
+        self.spawn_boosters()
+        self.manage_scrolling()
         self.manage_effect()
         self.update_score()
         self.increase_difficulty()
