@@ -57,7 +57,7 @@ class Level:
         self.score_surface.fill(pygame.Color(SCORE_CONTAINERE_BG))
         self.score_surface.set_alpha(150)
 
-        self.difficult_amount_score = 500
+        self.difficult_amount_score = 1000
 
     def create_platforms(self):
         _, last_y = Platform.get_last_pos()
