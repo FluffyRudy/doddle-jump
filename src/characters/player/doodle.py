@@ -3,9 +3,11 @@ from pygame_utility.image_util import load_image
 from pygame import Rect
 from pygame.sprite import Sprite
 from pygame.transform import flip
+from pygame.display import get_surface
 from pygame import K_LEFT, K_RIGHT
 from pygame.key import get_pressed
 from pygame import Surface
+from src.particle.particle import Stunned
 from ..status import Direction, State
 from ..base import Character
 from config import GRAPHICS
@@ -14,6 +16,7 @@ from constants import DOODLE_SPEED, WIDTH, HEIGHT, GRAVITY, JUMP_SPEED, SCROLLIN
 
 class Doodle(Character):
     def __init__(self, position: Tuple[int, int]):
+        self.main_surface = get_surface()
         super().__init__(position)
         self.image = load_image(GRAPHICS / "doodler-right.png", (0.7, 0.7))
         self.rect = self.image.get_rect(midbottom=position)
@@ -27,6 +30,7 @@ class Doodle(Character):
         self.speed_inc_factor = 0.2
 
         self.is_dead = False
+        self.stunned_effect = Stunned(self.rect.midtop)
 
     def movement(self):
         keys = get_pressed()
@@ -37,7 +41,7 @@ class Doodle(Character):
                 self.status.set_direction(Direction.LEFT)
                 self.image = flip(self.image, True, False)
             dx -= self.speed
-        if keys[K_RIGHT]:
+        elif keys[K_RIGHT]:
             if self.status.get_status()[0] != Direction.RIGHT:
                 self.status.set_direction(Direction.RIGHT)
                 self.image = flip(self.image, True, False)
@@ -73,6 +77,13 @@ class Doodle(Character):
                 return True
         return False
 
+    def dead(self):
+        self.is_dead = True
+
     def update(self, *args, **kwargs):
-        if not self.is_dead:
-            self.movement()
+        self.movement()
+        if self.is_dead:
+            x = self.rect.centerx - self.stunned_effect.image.get_width() // 2
+            y = self.rect.top - 50
+            self.stunned_effect.draw(self.main_surface, (x, y))
+            self.stunned_effect.animate()

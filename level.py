@@ -3,6 +3,7 @@ from typing import Tuple, Optional
 from random import randint, choice, uniform
 from pygame.sprite import Group, GroupSingle
 from src.characters.player.doodle import Doodle
+from src.characters.enemy.wasp import Wasp
 from src.platform.effects import EffectTypes, effect_map
 from src.platform.platform import (
     Platform,
@@ -22,6 +23,7 @@ from constants import (
     SCROLLING_TOP,
     DEFAULT_PLATFORM_SIZE,
     BOOSTER_OCCUR_INTERVAL,
+    WASP_OCCUR_INTERVAL,
     SCORE_CONTAINER_SIZE,
     SCORE_CONTAINERE_BG,
     BLACK,
@@ -44,6 +46,7 @@ class Level:
         self.visible_group = Group()
         self.platform_group = Group()
         self.booster_group = GroupSingle()
+        self.enemy_group = Group()
         self.effects_group = []
 
         self.create_platforms()
@@ -65,6 +68,13 @@ class Level:
 
         self.booster_last_spawn = pygame.time.get_ticks()
         self.booster_spawn_time = uniform(*BOOSTER_OCCUR_INTERVAL)
+
+        self.enemy_last_spawn = pygame.time.get_ticks()
+        self.enemy_spawn_time = uniform(*WASP_OCCUR_INTERVAL)
+
+        wasp = Wasp((100, 100))
+        self.visible_group.add(wasp)
+        self.enemy_group.add(wasp)
 
     def create_platforms(self):
         _, last_y = Platform.get_last_pos()
@@ -90,6 +100,19 @@ class Level:
             self.visible_group.add(spring)
             self.booster_last_spawn = current_time
             self.booster_spawn_time = uniform(*BOOSTER_OCCUR_INTERVAL)
+
+    def spawn_enemy(self):
+        current_time = pygame.time.get_ticks()
+        time_diff = current_time - self.enemy_last_spawn
+        if time_diff > self.enemy_spawn_time:
+            random_platform = self.get_random_platform()
+            if random_platform:
+                pos = random_platform.rect.center
+                wasp = Wasp(pos)
+                self.enemy_group.add(wasp)
+                self.visible_group.add(wasp)
+                self.enemy_last_spawn = current_time
+                self.enemy_spawn_time = uniform(*WASP_OCCUR_INTERVAL)
 
     def get_random_platform(self) -> Optional[Platform]:
         platform = None
@@ -117,6 +140,9 @@ class Level:
             for booster in self.booster_group.sprites():
                 booster.scroll(scroll_amount)
 
+            for enemy in self.enemy_group.sprites():
+                enemy.scroll(scroll_amount)
+
     def handle_platform_collision(self):
         if self.player.velocity_y <= 0:
             return
@@ -132,20 +158,31 @@ class Level:
                     platform.kill()
                 break
 
-    def topmost_platform(self) -> Platform:
-        return min(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
-
-    def bottomost_platform(self) -> Platform:
-        return max(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
+    def handle_enemy_collision(self):
+        for enemy in self.enemy_group.sprites():
+            if self.player.hitbox.colliderect(
+                enemy.rect
+            ) and pygame.sprite.collide_mask(self.player, enemy):
+                self.player.dead()
+                break
 
     def handle_booster_collision(self):
         for booster in self.booster_group.sprites():
             if isinstance(booster, Spring) and booster.rect.colliderect(
                 self.player.rect
             ):
-                if booster.rect.y >= self.player.rect.y and self.player.velocity_y > 0:
+                if (
+                    booster.rect.y >= self.player.hitbox.y
+                    and self.player.velocity_y > 0
+                ):
                     booster.activate()
                     self.player.jump(amplification=2)
+
+    def topmost_platform(self) -> Platform:
+        return min(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
+
+    def bottomost_platform(self) -> Platform:
+        return max(self.platform_group.sprites(), key=lambda platform: platform.rect.y)
 
     def add_effect(
         self, effect_type: EffectTypes, position: Tuple[int, int], size: Tuple[int, int]
@@ -183,23 +220,29 @@ class Level:
         start_rect = start_message.get_rect(center=SCREEN_CENTER)
         self.main_surface.blit(start_message, start_rect.topleft)
 
-    def is_player_dead(self):
+    def check_gameover(self):
         if self.player.hitbox.bottom >= HEIGHT:
-            return True
-        return False
+            self.gameover()
+
+    def gameover(self):
+        self.game_over = True
 
     def update(self):
-        self.handle_platform_collision()
-        self.handle_booster_collision()
+        if not self.player.is_dead:
+            self.handle_platform_collision()
+            self.handle_booster_collision()
+            self.handle_enemy_collision()
         self.visible_group.update()
         self.player_group.update()
         self.booster_group.update()
         self.create_platforms()
         self.spawn_boosters()
+        self.spawn_enemy()
         self.manage_scrolling()
         self.manage_effect()
         self.update_score()
         self.increase_difficulty()
+        self.check_gameover()
 
     def draw(self):
         self.visible_group.draw(self.main_surface)

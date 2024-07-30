@@ -83,7 +83,7 @@ class Game:
         elif self.main_state == GameState.GAMEOVER:
             self.restart()
 
-        if self.level.is_player_dead():
+        if self.level.game_over:
             self.main_state = GameState.GAMEOVER
 
     def run(self):
