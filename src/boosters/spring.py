@@ -7,10 +7,10 @@ from config import GRAPHICS
 
 class Spring(Booster):
     def __init__(self, midbottom_position: Tuple[int, int]):
-        frame_duration = 200
+        animation_speed = 200
         frames = load_frames(GRAPHICS / "spring")
         super().__init__(
-            midbottom_position, frames, frame_duration, repeat_animation=False
+            midbottom_position, frames, animation_speed, repeat_animation=False
         )
 
     def update(self, *args, **kwargs):
