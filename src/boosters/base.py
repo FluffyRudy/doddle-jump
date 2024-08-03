@@ -15,7 +15,7 @@ class Booster(Sprite):
         super().__init__()
         self.__frames = animation_frames
         self.__frame_index = 0
-        self.__animation_speed = (last_duration / 1000.0) / len(self.__frames)
+        self.__animation_speed = last_duration / 1000.0
 
         self.__is_active = is_active
         self.__repeat_animation = repeat_animation

@@ -10,7 +10,7 @@ class Wasp(Character):
     def __init__(self, position: Tuple[int, int]):
         super().__init__(position)
 
-        self.__frames = load_frames(GRAPHICS / "wasp")
+        self.__frames = load_frames(GRAPHICS / "wasp", scale_ratio=(0.8, 0.8))
         self.__frame_index = 0
         self.__animation_speed = 0.2
 
